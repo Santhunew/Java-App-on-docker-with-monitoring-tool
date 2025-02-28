@@ -1,6 +1,6 @@
 #create the security group
 resource "aws_security_group" "SG" {
-  name = var.sg_name
+  name = var.security_group_name
   description = "Allow inbound and outbound traffic"
 
   ingress {
@@ -127,12 +127,16 @@ resource "aws_instance" "sonarqube" {
                 java --version
 
             # Install Docker
-                # Add Docker's official GPG key:
-                sudo apt-get update -y
-                sudo apt-get install -y ca-certificates curl
-                sudo install -m 0755 -d /etc/apt/keyrings
-                sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                sudo chmod a+r /etc/apt/keyrings/docker.asc
+              sudo apt-get install -y ca-certificates curl
+              sudo install -m 0755 -d /etc/apt/keyrings
+              sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+              sudo chmod a+r /etc/apt/keyrings/docker.asc
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+              sudo apt-get update -y
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              sudo usermod -aG docker jenkins
 
             # Install Sonarqube using docker
                 sudo docker run -d --name sonarqube -p 9090:9000 sonarqube
@@ -155,12 +159,16 @@ resource "aws_instance" "nexus" {
                 java --version
 
             # Install Docker
-                # Add Docker's official GPG key:
-                sudo apt-get update
-                sudo apt-get install -y ca-certificates curl
-                sudo install -m 0755 -d /etc/apt/keyrings -y
-                sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                sudo chmod a+r /etc/apt/keyrings/docker.asc
+              sudo apt-get install -y ca-certificates curl
+              sudo install -m 0755 -d /etc/apt/keyrings
+              sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+              sudo chmod a+r /etc/apt/keyrings/docker.asc
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+              sudo apt-get update -y
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              sudo usermod -aG docker jenkins
 
             # Install nexus using docker
                 sudo docker run -d -p 8081:8081 --name nexus sonatype/nexus3
@@ -183,12 +191,16 @@ resource "aws_instance" "monitoring" {
                 java --version
 
             # Install Docker
-                # Add Docker's official GPG key:
-                sudo apt-get update
-                sudo apt-get install -y ca-certificates curl
-                sudo install -m 0755 -d /etc/apt/keyrings -y
-                sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                sudo chmod a+r /etc/apt/keyrings/docker.asc
+              sudo apt-get install -y ca-certificates curl
+              sudo install -m 0755 -d /etc/apt/keyrings
+              sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+              sudo chmod a+r /etc/apt/keyrings/docker.asc
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+              sudo apt-get update -y
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              sudo usermod -aG docker jenkins
 
             # Install nexus using docker
                 sudo docker pull prom/prometheus
@@ -206,8 +218,27 @@ resource "aws_instance" "Docker" {
     instance_type = t2.medium
     key_name = var.key_name
     security_groups = [aws_security_group.SG.name]
+
+    user_data = <<-EOF
+            #!/bin/bash
+                sudo apt update -y
+                sudo apt install openjdk-17-jre -y
+                java --version
+
+            # Install Docker
+              sudo apt-get install -y ca-certificates curl
+              sudo install -m 0755 -d /etc/apt/keyrings
+              sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+              sudo chmod a+r /etc/apt/keyrings/docker.asc
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+              sudo apt-get update -y
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              sudo usermod -aG docker jenkins
+              EOF
+
     tags = {
         Name = "Docker_EC2"
     }
-
 }
