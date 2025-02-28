@@ -25,9 +25,6 @@ jobs:
 
     - name: Initialize Terraform
       run: terraform init
-    
-    - name: Debug Terraform Logs  # ✅ Print Logs for Debugging
-      run: cat /github/workflow/event.json
 
     - name: Format Check
       run: terraform fmt -recursive
