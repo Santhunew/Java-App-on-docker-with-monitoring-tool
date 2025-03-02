@@ -155,7 +155,7 @@ resource "aws_instance" "nexus" {
     user_data = <<-EOF
             #!/bin/bash
                 sudo apt update -y
-                sudo apt install openjdk-17-jre -y
+                sudo apt-get install openjdk-8-jdk -y
                 java --version
 
             # Install Docker
@@ -169,9 +169,22 @@ resource "aws_instance" "nexus" {
               sudo systemctl enable docker
               sudo systemctl start docker
               sudo usermod -aG docker jenkins
+            
+            # Create docker volumes
+              sudo docker volume create --name nexus-data
+              sudo docker volume create --name nexus-logs
+              sudo docker volume create --name nexus-conf
 
             # Install nexus using docker
                 sudo docker run -d -p 8081:8081 --name nexus sonatype/nexus3
+
+            # Enable and Configure UFW (Uncomplicated Firewall)
+              sudo ufw enable -y
+              sudo ufw allow 8081
+              sudo ufw allow 22
+              sudo ufw allow 80 
+              sudo ufw reload
+              sudo ufw status
                 EOF
     tags = {
         Name = "Nexus_EC2"
